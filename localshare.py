@@ -5,6 +5,7 @@ import urllib.request as urllib
 from http import server as httpserver
 from collections import namedtuple
 import os
+import sys
 
 import zeroconf
 import click
@@ -32,6 +33,7 @@ def share(filename):
     full_path = os.path.join(os.curdir, filename)
     if not os.path.isfile(full_path):
         click.echo("%s is not an existing file. Aborting." % full_path)
+        sys.exit(1)
 
     # Bind to port 0. OS assigns a random open port.
     server = httpserver.HTTPServer((ip, 0), utils.LocalFileHandler)
