@@ -50,6 +50,8 @@ def share(filename, forever):
             server.serve_forever(poll_interval=0.5)
         else:
             server.handle_request()
+            click.echo('File downloaded by peer. Exiting')
+            sys.exit(0)
     except KeyboardInterrupt:
         pass
 
