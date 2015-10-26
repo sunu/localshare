@@ -1,0 +1,6 @@
+click==5.1
+netifaces==0.10.4
+zeroconf==0.17.4
+
+pytest==2.8.2
+
