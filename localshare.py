@@ -23,7 +23,8 @@ def cli():
 
 @cli.command()
 @click.argument('filename', nargs=1, type=click.Path(exists=True))
-def share(filename):
+@click.option('--forever', default=False)
+def share(filename, forever):
     """Share a file in the local network."""
     ip = utils.get_ip()
     # port = get_port()
@@ -45,7 +46,10 @@ def share(filename):
     try:
         zc_instance.register_service(zc_info)
         click.echo('Sharing %s at %s' % (filename, url))
-        server.serve_forever(poll_interval=0.5)
+        if forever:
+            server.serve_forever(poll_interval=0.5)
+        else:
+            server.handle_request()
     except KeyboardInterrupt:
         pass
 
@@ -83,12 +87,15 @@ def map_files():
 def download(filename):
     """List all available files and download the chosen one."""
     files = map_files()
-    if filename and filename in files.keys():
-        click.echo('File found.')
-        click.echo('Download started ...')
-        urllib.urlretrieve(files[filename], filename)
-        click.echo('Download complete.')
-        sys.exit(0)
+    if filename:
+        if filename in files.keys():
+            click.echo('File found.')
+            click.echo('Download started ...')
+            urllib.urlretrieve(files[filename], filename)
+            click.echo('Download complete.')
+            sys.exit(0)
+        else:
+            raise SystemExit('%s not found in available files. Aborting.' % filename)
     for index, (filename, url) in enumerate(files.items()):
         click.echo("%s - %s - %s" % (index, filename, url))
     choice = click.prompt('Enter index of file to download', type=int)
