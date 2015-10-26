@@ -4,6 +4,7 @@ import time
 import urllib.request as urllib
 from http import server as httpserver
 from collections import namedtuple
+import os
 
 import zeroconf
 import click
@@ -26,6 +27,11 @@ def share(filename):
     """Share a file in the local network."""
     ip = utils.get_ip()
     # port = get_port()
+
+    # check if file exists
+    full_path = os.path.join(os.curdir, filename)
+    if not os.path.isfile(full_path):
+        click.echo("%s is not an existing file. Aborting." % full_path)
 
     # Bind to port 0. OS assigns a random open port.
     server = httpserver.HTTPServer((ip, 0), utils.LocalFileHandler)
