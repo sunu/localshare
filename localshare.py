@@ -3,8 +3,7 @@
 import time
 import urllib.request as urllib
 from http import server as httpserver
-from collections import namedtuple
-import os
+from collections import OrderedDict
 import sys
 
 import zeroconf
@@ -51,44 +50,51 @@ def share(filename):
         pass
 
 
-def list_files():
+def map_files():
     """List all available files."""
-    files = []
+    files = OrderedDict()
     zc_instance = zeroconf.Zeroconf()
     listener = utils.ServiceListener()
-    Localfile = namedtuple('Localfile', ['filename', 'url'])
 
     zeroconf.ServiceBrowser(zc_instance, "_http._tcp.local.", listener)
 
     try:
+        # Give listener some time to discover available services.
+        time.sleep(0.5)
         if not listener.services:
             click.echo('No files available. Waiting ...')
-        while not listener.services:
-            time.sleep(0.5)
-        click.echo('Peer(s) found.')
+            while not listener.services:
+                time.sleep(0.5)
+            click.echo('Peer(s) found.')
         for service in listener.services:
             address = utils.bytes_to_ip(service.address)
             port = service.port
             filename = service.properties[b'filename'].decode('utf-8')
             url = "http://" + address + ":" + str(port) + "/" + \
                   urllib.pathname2url(filename)
-            localfile = Localfile(filename, url)
-            files.append(localfile)
+            files[filename] = url
     except KeyboardInterrupt:
-        pass
+        sys.exit(0)
     return files
 
 
 @cli.command()
-def download():
+@click.argument('filename', default='')
+def download(filename):
     """List all available files and download the chosen one."""
-    files = list_files()
-    for index, file in enumerate(files):
-        click.echo("%s - %s - %s" % (index, file.filename, file.url))
-    choice = click.prompt('Enter index of file to download:', type=int)
+    files = map_files()
+    if filename and filename in files.keys():
+        click.echo('File found.')
+        click.echo('Download started ...')
+        urllib.urlretrieve(files[filename], filename)
+        click.echo('Download complete.')
+        sys.exit(0)
+    for index, (filename, url) in enumerate(files.items()):
+        click.echo("%s - %s - %s" % (index, filename, url))
+    choice = click.prompt('Enter index of file to download', type=int)
     if 0 <= choice < len(files):
         click.echo('Download started ...')
-        urllib.urlretrieve(files[choice].url, files[choice].filename)
+        urllib.urlretrieve(list(files.items())[choice][1], list(files.items())[choice][0])
         click.echo('Download complete.')
     else:
         click.echo('Invalid choice.')
