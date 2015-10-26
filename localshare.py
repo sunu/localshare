@@ -23,17 +23,11 @@ def cli():
 
 
 @cli.command()
-@click.argument('filename', nargs=1)
+@click.argument('filename', nargs=1, type=click.Path(exists=True))
 def share(filename):
     """Share a file in the local network."""
     ip = utils.get_ip()
     # port = get_port()
-
-    # check if file exists
-    full_path = os.path.join(os.curdir, filename)
-    if not os.path.isfile(full_path):
-        click.echo("%s is not an existing file. Aborting." % full_path)
-        sys.exit(1)
 
     # Bind to port 0. OS assigns a random open port.
     server = httpserver.HTTPServer((ip, 0), utils.LocalFileHandler)
@@ -93,6 +87,7 @@ def download():
         click.echo("%s - %s - %s" % (index, file.filename, file.url))
     choice = click.prompt('Enter index of file to download:', type=int)
     if 0 <= choice < len(files):
+        click.echo('Download started ...')
         urllib.urlretrieve(files[choice].url, files[choice].filename)
         click.echo('Download complete.')
     else:
