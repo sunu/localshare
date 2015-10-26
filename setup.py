@@ -12,7 +12,7 @@ classifiers = [
 
 setup(
     name='localshare',
-    version='0.1',
+    version='0.2',
     py_modules=['localshare', 'utils'],
     install_requires=[
         'Click',
